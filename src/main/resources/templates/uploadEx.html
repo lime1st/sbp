@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+    <script
+          src="https://code.jquery.com/jquery-3.6.0.js"
+          integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk="
+          crossorigin="anonymous"></script>
+</head>
+<body>
+
+  <input name="uploadFiles" type="file" multiple>
+  <button class="uploadBtn">upload</button>
+
+  <div class="uploadResult">
+
+  </div>
+
+  <script>
+    $('.uploadBtn').click(function(){
+      var formData = new FormData();
+
+      var inputFile = $("input[type='file']");
+
+      var files = inputFile[0].files;
+
+      for(var i = 0; i < files.length; i++){
+        console.log(files[i]);
+        formData.append("uploadFiles", files[i]);
+      }
+
+      //  실제 업로드 부분
+      //  upload ajax
+      $.ajax({
+        url: '/uploadAjax',
+        processData: false,
+        contentType: false,
+        data: formData,
+        type: 'POST',
+        dataType: 'json',
+        success: function(result){
+            console.log("업로드 결과: " + result);
+          showUploadedImages(result);
+        },
+        error: function(jqXHR, textStatus, errorThrown){
+          console.log(textStatus);
+        }
+      });
+    });
+
+    function showUploadedImages(arr){
+
+        console.log(arr);
+
+        let divArea = $(".uploadResult");
+
+        let str = "";
+
+        for(let i = 0; i < arr.length; i++) {
+            str += "<div>";
+            str += "<img src = '/display?fileName=" + arr[i].thumbnailURL + "'>";
+            str += "<button class='removeBtn' data-name='" + arr[i].imageURL + "'>REMOVE</button>";
+            str += "</div>";
+        }
+        divArea.append(str);
+    }
+
+    $(".uploadResult").on("click", ".removeBtn", function (e){
+
+        let target = $(this);
+        let fileName = target.data("name");
+        let targetDiv = $(this).closest("div");
+
+        console.log("파일명: " + fileName);
+
+        $.post('/removeFile', {fileName: fileName}, function(result){
+            console.log(result);
+            if(result === true)
+                targetDiv.remove();
+        })
+    });
+
+  </script>
+
+</body>
+</html>
